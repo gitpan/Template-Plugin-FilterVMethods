@@ -1,0 +1,13 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+lib/Template/Plugin/FilterVMethods.pm
+t/00_load_plugin.t
+t/01_static_filter.t
+t/02_dynamic_filter.t
+t/03_plugin_filter.t
+t/04_filter_chain.t
+t/manifest.t
+t/pod.t
+META.yml                                 Module meta-data (added by MakeMaker)
