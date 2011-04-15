@@ -1,3 +1,4 @@
+use utf8;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -12,12 +13,13 @@ WriteMakefile(
       : ()),
     PL_FILES            => {},
     BUILD_REQUIRES      => {
+        'ok'                            => 0,
         'Test::More'                    => 0,
         'Template::Plugin::HTML::Strip' => 0,
     },
     PREREQ_PM => {
-        'List::AllUtils'                => 0,
         'namespace::autoclean'          => 0,
+        'List::AllUtils'                => 0,
         'Template'                      => 0,
         'Moose'                         => 0,
         'MooseX::ClassAttribute'        => 0,

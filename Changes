@@ -1,2 +1,10 @@
-0.01	2011-04-11
-		First version, released on an unsuspecting world.
+0.02  2011-04-12
+	- POD corrections/additions
+	- declared utf8 mode for FilterVMethods.pm source
+	- Fixed FVM_PREFIX config implementation
+	- Added 05_config_prefix.t to test FVM_PREFIX
+	- Added ok.pm to Makefile.PL PREREQ_PM list
+	- Updated README
+
+0.01  2011-04-11
+	- First version, released on an unsuspecting world.

@@ -1,14 +1,15 @@
 --- #YAML:1.0
 name:               Template-Plugin-FilterVMethods
-version:            0.01
+version:            0.02
 abstract:           Add a .filter vmethod, or add individual filters as individual vmethods. 
 author:
-    - Richard Sim√µes <rsimoes@cpan.org>
+    - Richard Simıes <rsimoes@cpan.org>
 license:            perl
 distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
 build_requires:
+    ok:                   0
     Template::Plugin::HTML::Strip:  0
     Test::More:           0
 requires:

@@ -8,6 +8,7 @@ t/01_static_filter.t
 t/02_dynamic_filter.t
 t/03_plugin_filter.t
 t/04_filter_chain.t
+t/05_config_prefix.t
 t/manifest.t
 t/pod.t
 META.yml                                 Module meta-data (added by MakeMaker)

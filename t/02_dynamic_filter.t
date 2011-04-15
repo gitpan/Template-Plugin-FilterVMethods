@@ -7,7 +7,7 @@ use Template::Test;
 
 my $test = q([% stanza = BLOCK %]
 I'm a little teapot,
-Tall and stout,
+Short and sad and stout,
 Here is my handle,
 Here is my spout.
 [% END %]);
@@ -20,25 +20,25 @@ Here is my spout.);
 my $data = qq(
 -- test --
 $test
-[% stanza FILTER replace('Tall', 'Short') %]
+[% stanza FILTER remove(' and sad') %]
 -- expect --
 $expect
 -- test --
 [% USE FilterVMethods %]
 $test
-[% stanza.filter('replace', 'Tall', 'Short') %]
+[% stanza.filter('remove', ' and sad') %]
 -- expect --
 $expect
 -- test --
-[% USE FilterVMethods('replace') %]
+[% USE FilterVMethods('remove') %]
 $test
-[% stanza.replace('Tall', 'Short') %]
+[% stanza.remove(' and sad') %]
 -- expect --
 $expect
 -- test --
 [% USE FilterVMethods(':all') %]
 $test
-[% stanza.replace('Tall', 'Short') %]
+[% stanza.remove(' and sad') %]
 -- expect --
 $expect
 );

@@ -4,7 +4,7 @@ use lib qw( ./lib ../lib );
 use Template::Plugin::HTML::Strip;
 use Template::Test;
 
-$Template::Test::DEBUG = 1;
+#$Template::Test::DEBUG = 1;
 
 my $test = q([% stanza = BLOCK %]
 <p>I'm a little teapot,</p>
@@ -28,29 +28,18 @@ $test
 $expect
 -- test --
 [% USE HTML.Strip %]
-[% USE FilterVMethods %]
+[% USE FilterVMethods('upper', 'remove', 'html_strip') %]
 $test
-[% stanza.filter('upper').filter('remove', ' AND SAD').filter('html_strip') %]
+[% stanza.f_upper.f_remove(' AND SAD').f_html_strip %]
 -- expect --
 $expect
 -- test --
-[% USE HTML.Strip
-	emit_spaces = 0
-%]
-[% USE FilterVMethods('upper', 'removed', 'html_strip') %]
-$test
-[% stanza.upper.remove(' AND SAD').html_strip %]
--- expect --
-$expect
--- test --
-[% USE HTML.Strip
-	emit_spaces = 0
-%]
+[% USE HTML.Strip %]
 [% USE FilterVMethods(':all') %]
 $test
-[% stanza.filter('lower').remove(' and sad').html_strip.upper %]
+[% stanza.f_upper.filter('lower').f_remove(' and sad').f_html_strip.filter('upper') %]
 -- expect --
 $expect
 );
 
-test_expect($data, { POST_CHOMP => 1 } );
+test_expect($data, { POST_CHOMP => 1, FVM_PREFIX => 'f_' } );
