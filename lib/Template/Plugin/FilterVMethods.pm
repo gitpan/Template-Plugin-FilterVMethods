@@ -1,7 +1,6 @@
 package Template::Plugin::FilterVMethods;
 
 use utf8;
-use constant 'FilterVMethods' => __PACKAGE__;
 use Moose;
 use MooseX::NonMoose;
 use MooseX::ClassAttribute;
@@ -9,9 +8,12 @@ use MooseX::FollowPBP;
 use MooseX::Types::Moose qw/ArrayRef HashRef Str CodeRef/;
 use List::AllUtils qw/any uniq/;
 use namespace::autoclean;
+use constant 'FilterVMethods' => __PACKAGE__;
 
 extends 'Template::Plugin';
-our $VERSION = '0.02';
+our $VERSION = '0.03';
+
+=encoding utf-8
 
 =head1 NAME
 

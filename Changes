@@ -1,4 +1,8 @@
-0.02  2011-04-12
+0.03  2011-04-15
+	- POD now in utf-8
+	- corrected datestamp for 0.02 change list in this file
+
+0.02  2011-04-15
 	- POD corrections/additions
 	- declared utf8 mode for FilterVMethods.pm source
 	- Fixed FVM_PREFIX config implementation

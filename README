@@ -1,6 +1,6 @@
 
 This archive contains the distribution Template-Plugin-FilterVMethods,
-version 0.02:
+version 0.03:
 
 Template::Plugin::FilterVMethods - Add a .filter vmethod, or add individual filters as individual vmethods. 
 
