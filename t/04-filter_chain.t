@@ -4,13 +4,14 @@ use lib qw( ./lib ../lib );
 use Template::Plugin::HTML::Strip;
 use Template::Test;
 
-#$Template::Test::DEBUG = 1;
+$Template::Test::DEBUG = 1;
 
 my $test = q([% stanza = BLOCK %]
 <p>I'm a little teapot,</p>
-Short and sad <em>and</em> stout,
+Short <em>and</em> stout,
 <strong>Here</strong> is my handle,
 Here is my <span style="color:blue">spout.</span>
+Gobble,<br />gobble.
 [% END %]);
 
 my $expect = q(I'M A LITTLE TEAPOT,
@@ -23,23 +24,34 @@ my $data = qq(
 $test
 [% USE HTML.Strip %]
 [% USE FilterVMethods %]
-[% stanza FILTER upper FILTER remove(' AND SAD') FILTER html_strip %]
+[% stanza FILTER html_strip FILTER truncate(74, '') FILTER upper %]
 -- expect --
 $expect
 -- test --
 [% USE HTML.Strip %]
-[% USE FilterVMethods('upper', 'remove', 'html_strip') %]
+[% USE FilterVMethods %]
 $test
-[% stanza.f_upper.f_remove(' AND SAD').f_html_strip %]
+[% stanza.filter('html_strip').filter('truncate', 74, '').filter('upper') %]
 -- expect --
 $expect
 -- test --
-[% USE HTML.Strip %]
+[% USE HTML.Strip
+	emit_spaces = 0
+%]
+[% USE FilterVMethods('upper', 'truncate', 'html_strip') %]
+$test
+[% stanza.html_strip.truncate(74, '').upper %]
+-- expect --
+$expect
+-- test --
+[% USE HTML.Strip
+	emit_spaces = 0
+%]
 [% USE FilterVMethods(':all') %]
 $test
-[% stanza.f_upper.filter('lower').f_remove(' and sad').f_html_strip.filter('upper') %]
+[% stanza.html_strip.filter('lower').truncate(74, '').upper %]
 -- expect --
 $expect
 );
 
-test_expect($data, { POST_CHOMP => 1, FVM_PREFIX => 'f_' } );
+test_expect($data, { POST_CHOMP => 1 } );

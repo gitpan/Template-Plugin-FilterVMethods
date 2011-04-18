@@ -3,12 +3,12 @@ MANIFEST
 Makefile.PL
 README
 lib/Template/Plugin/FilterVMethods.pm
-t/00_load_plugin.t
-t/01_static_filter.t
-t/02_dynamic_filter.t
-t/03_plugin_filter.t
-t/04_filter_chain.t
-t/05_config_prefix.t
+t/00-load_plugin.t
+t/01-static_filter.t
+t/02-dynamic_filter.t
+t/03-plugin_filter.t
+t/04-filter_chain.t
+t/05-config_prefix.t
 t/manifest.t
 t/pod.t
 META.yml                                 Module meta-data (added by MakeMaker)

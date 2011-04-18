@@ -3,13 +3,14 @@ use warnings;
 use lib qw( ./lib ../lib );
 use Template::Test;
 
-#$Template::Test::DEBUG = 1;
+$Template::Test::DEBUG = 1;
 
 my $test = q([% stanza = BLOCK %]
 I'm a little teapot,
-Short and sad and stout,
+Short and stout,
 Here is my handle,
 Here is my spout.
+Gobble, gobble.
 [% END %]);
 
 my $expect = q(I'm a little teapot,
@@ -20,25 +21,25 @@ Here is my spout.);
 my $data = qq(
 -- test --
 $test
-[% stanza FILTER remove(' and sad') %]
+[% stanza FILTER truncate(74, '') %]
 -- expect --
 $expect
 -- test --
 [% USE FilterVMethods %]
 $test
-[% stanza.filter('remove', ' and sad') %]
+[% stanza.filter('truncate', 74, '') %]
 -- expect --
 $expect
 -- test --
-[% USE FilterVMethods('remove') %]
+[% USE FilterVMethods('truncate') %]
 $test
-[% stanza.remove(' and sad') %]
+[% stanza.truncate(74, '') %]
 -- expect --
 $expect
 -- test --
 [% USE FilterVMethods(':all') %]
 $test
-[% stanza.remove(' and sad') %]
+[% stanza.truncate(74, '') %]
 -- expect --
 $expect
 );

@@ -1,6 +1,11 @@
+0.04  2011-04-16
+	- Fixed manifest.t
+	- Made tests stronger
+	- Cleaned up code a bit
+
 0.03  2011-04-15
 	- POD now in utf-8
-	- corrected datestamp for 0.02 change list in this file
+	- Corrected datestamp for 0.02 change list in this file
 
 0.02  2011-04-15
 	- POD corrections/additions
@@ -11,4 +16,4 @@
 	- Updated README
 
 0.01  2011-04-11
-	- First version, released on an unsuspecting world.
+	- First version, released on an unsuspecting world

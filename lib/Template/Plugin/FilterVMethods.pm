@@ -5,13 +5,14 @@ use Moose;
 use MooseX::NonMoose;
 use MooseX::ClassAttribute;
 use MooseX::FollowPBP;
-use MooseX::Types::Moose qw/ArrayRef HashRef Str CodeRef/;
+use MooseX::Types::Moose qw/ArrayRef HashRef Str Bool/;
 use List::AllUtils qw/any uniq/;
 use namespace::autoclean;
 use constant 'FilterVMethods' => __PACKAGE__;
 
 extends 'Template::Plugin';
-our $VERSION = '0.03';
+
+our $VERSION = '0.04';
 
 =encoding utf-8
 
@@ -21,23 +22,22 @@ Template::Plugin::FilterVMethods - Add a .filter vmethod, or add individual filt
 
 =head1 SYNOPSIS
 
-	[% USE FilterVMethods %]
+	[% USE FILTERVMETHODS %]
 
 	[% voice = '  loud  ' %]
 	[% IF voice.filter('trim').filter('upper') == 'LOUD' %]
 	STOP YELLING AT ME
 	[% END %]
 
-   [%# or %]
+or
 
 	[% USE FilterVMethods('trim', 'upper') %]
-	[%# Pass the argument ":all" to import all filters available. %]
+	[%# Pass the argument ":all" to import all available filters. %]
 
 	[% voice = '  loud  ' %]
 	[% IF voice.trim.upper == 'LOUD' %]
 	I'M NOT YELLING
 	[% END %]
-
 
 =head1 DESCRIPTION
 
@@ -46,18 +46,18 @@ more flexible filtering syntax. In comparison with the synopsis examples, mixing
 work:
 
 	[% IF voice FILTER trim FILTER upper == 'LOUD' %]
-	# Couldn't render template "my_template.txt: file error - parse error - my_template.txt line 1: unexpected token (FILTER)
+	[%# Couldn't render template "my_template.txt: file error - parse error - my_template.txt line 1: unexpected token (FILTER) %]
 
 	[% IF (voice FILTER trim FILTER upper) == 'LOUD' %]
-	# Couldn't render template "my_template.txt: file error - parse error - my_template.txt line 1: unexpected token (FILTER)
+	[%# Couldn't render template "my_template.txt: file error - parse error - my_template.txt line 1: unexpected token (FILTER) %]
 
 The syntactically sound way to do this is to filter the variable (or a copy thereof) beforehand. Now a template writer can simply
 use a filter as a vmethod instead.
 
 =head1 CONFIGURATION
 
-To help avoid vmethod name collisions, L<Template::Plugin::FilterVMethods> accepts one configuration setting, C<FMV_PREFIX>. This
-can be set to a string containing characters within C<[a-z_]> and will be prepended to all vmethods except C<.filter> itself:
+In case there is a risk of vmethod-name collisions, L<Template::Plugin::FilterVMethods> accepts one configuration setting, C<FMV_PREFIX>.
+This can be set to a string containing characters within C<[a-z_]> and will be prepended to all vmethods except C<.filter> itself:
 
 	my $tt = Template->new({ FMV_PREFIX => 'f_' });
 
@@ -94,11 +94,11 @@ has 'other_vmethods', (
 # vmethods defined by Template::Plugin::FilterVMethods. A class attribute
 # so as to share the list between multiple [% USE FilterVMethods %] calls.
 class_has 'fvm_vmethods', (
-	isa        => HashRef[ [Str, CodeRef] ],
+	isa        => HashRef[Bool],
 	is         => 'rw',
 	reader     => 'get_fvm_vmethods',
 	writer     => 'set_fvm_vmethods',
-	default    => sub { { 'replace' => 1 } }, # Pretend 'replace' is a fvm_vmethod
+	default    => sub { {} },
 );
 
 # Refresh list of other vmethods before every access:
@@ -114,7 +114,7 @@ before 'get_other_vmethods', sub {
 	}
 	my $fmv_vmethods = $self->get_fvm_vmethods;
 	foreach my $vmethod_name (keys %other_vmethods) {
-		delete $other_vmethods{$vmethod_name} if exists $fmv_vmethods->{$vmethod_name};
+		delete $other_vmethods{$vmethod_name} if $fmv_vmethods->{$vmethod_name};
 	}
 	$self->set_other_vmethods(\%other_vmethods);
 };
@@ -133,13 +133,13 @@ sub BUILD {
 	my $context = $self->get_context;
 	my $config = $self->get_config;
 	$config->{'FVM_PREFIX'} = '' if !exists $config->{'FVM_PREFIX'};
-	my $requested_filters = $self->get_requested_filters;
+	return FilterVMethods->error("FVM_PREFIX includes characters outside [a-z_].")
+		if $config->{'FVM_PREFIX'} =~ /[^a-z_]/;
 
+	my $requested_filters = $self->get_requested_filters;
 	# if requested to get all available filters:
 	if ( any {$_ eq ':all'} @$requested_filters ) {
-		# Get pre-bundled filters:
-		use Data::Dumper;
-		#print Dumper $context;
+		# Get core filters:
 		my @available_filters;
 		{
 			require Template::Filters;
@@ -155,23 +155,24 @@ sub BUILD {
 		}
 		$requested_filters = \@available_filters;
 	}
-	
-	# Create a vmethod for each filter:
+
+	# Define a vmethod for each filter:
 	my $prefix = $self->get_filter_prefix;
-	return FilterVMethods->error("FVM_PREFIX includes characters outside [a-z_].") if $prefix =~ /[^a-z_]/;
 	my $fvm_vmethods = FilterVMethods->get_fvm_vmethods;
 	my $other_vmethods = $self->get_other_vmethods;
 	foreach my $filter_name (@$requested_filters) {
 		$filter_name = $prefix . $filter_name;
-		next if $filter_name eq 'replace';
-		if( exists $other_vmethods->{$filter_name} ) {
-			return FilterVMethods->error("Virtual-method name collision on $filter_name");
-		} elsif ( !exists $fvm_vmethods->{$filter_name} ) {
+		next if any { $filter_name eq $_ } 'replace', 'remove';
+		if ( $other_vmethods->{$filter_name} ) {
+			return FilterVMethods->error("Virtual-method name collision on '$filter_name'");
+		} elsif ( !$fvm_vmethods->{$filter_name} ) {
 			my $sub = sub { $self->get_filter_sub($filter_name, @_) };
 			$context->define_vmethod('scalar', $filter_name, $sub);
-			$fvm_vmethods->{$filter_name} = $sub; # A hashref, so we're affecting the class attribute.
+			$fvm_vmethods->{$filter_name} = 1;
 		}
 	}
+	
+	# Define the 'filter' vmethod:
 	if ( !$fvm_vmethods->{'filter'} ) {
 		$context->define_vmethod('scalar', 'filter', sub { $self->use_filter(@_) } );
 		$fvm_vmethods->{'filter'} = 1;
@@ -197,7 +198,6 @@ sub get_filter_sub {
 	my $filter = $context->filter($filter_name, \@args);
 	return $filter->($value);
 }
-
 sub _build_config {
 	my $self = shift;
 	my $context = $self->get_context;
@@ -208,7 +208,6 @@ sub _build_filter_prefix {
 	my $config = $self->get_config;
 	return defined $config->{'FVM_PREFIX'} ? $config->{'FVM_PREFIX'} : '';
 }
-
 
 =head1 AUTHOR
 

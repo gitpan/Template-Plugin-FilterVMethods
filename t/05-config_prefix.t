@@ -4,13 +4,14 @@ use lib qw( ./lib ../lib );
 use Template::Plugin::HTML::Strip;
 use Template::Test;
 
-$Template::Test::DEBUG = 1;
+#$Template::Test::DEBUG = 1;
 
 my $test = q([% stanza = BLOCK %]
 <p>I'm a little teapot,</p>
 Short and sad <em>and</em> stout,
 <strong>Here</strong> is my handle,
 Here is my <span style="color:blue">spout.</span>
+Gobble, gobble.
 [% END %]);
 
 my $expect = q(I'M A LITTLE TEAPOT,
@@ -23,34 +24,30 @@ my $data = qq(
 $test
 [% USE HTML.Strip %]
 [% USE FilterVMethods %]
-[% stanza FILTER upper FILTER remove(' AND SAD') FILTER html_strip %]
+[% stanza FILTER html_strip FILTER remove(' and sad') FILTER truncate(74, '') FILTER upper %]
 -- expect --
 $expect
 -- test --
 [% USE HTML.Strip %]
 [% USE FilterVMethods %]
 $test
-[% stanza.filter('upper').filter('remove', ' AND SAD').filter('html_strip') %]
+[% stanza.filter('html_strip').filter('remove', ' and sad').filter('truncate', 74, '').filter('upper') %]
 -- expect --
 $expect
 -- test --
-[% USE HTML.Strip
-	emit_spaces = 0
-%]
-[% USE FilterVMethods('upper', 'removed', 'html_strip') %]
+[% USE HTML.Strip %]
+[% USE FilterVMethods('upper', 'remove', 'truncate', 'html_strip') %]
 $test
-[% stanza.upper.remove(' AND SAD').html_strip %]
+[% stanza.f_html_strip.f_remove(' and sad').f_truncate(74, '').f_upper %]
 -- expect --
 $expect
 -- test --
-[% USE HTML.Strip
-	emit_spaces = 0
-%]
+[% USE HTML.Strip %]
 [% USE FilterVMethods(':all') %]
 $test
-[% stanza.filter('lower').remove(' and sad').html_strip.upper %]
+[% stanza.f_html_strip.filter('lower').remove(' and sad').f_truncate(74, '').f_upper %]
 -- expect --
 $expect
 );
 
-test_expect($data, { POST_CHOMP => 1 } );
+test_expect($data, { POST_CHOMP => 1, FVM_PREFIX => 'f_' } );
