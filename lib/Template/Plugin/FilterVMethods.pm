@@ -12,7 +12,7 @@ use constant 'FilterVMethods' => __PACKAGE__;
 
 extends 'Template::Plugin';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =encoding utf-8
 
@@ -23,7 +23,6 @@ Template::Plugin::FilterVMethods - Add a .filter vmethod, or add individual filt
 =head1 SYNOPSIS
 
 	[% USE FILTERVMETHODS %]
-
 	[% voice = '  loud  ' %]
 	[% IF voice.filter('trim').filter('upper') == 'LOUD' %]
 	STOP YELLING AT ME
@@ -63,42 +62,43 @@ This can be set to a string containing characters within C<[a-z_]> and will be p
 
 =cut
 
-has 'context', (
-	isa        => 'Template::Context',
-	is         => 'ro',
-	required   => 1,
+has 'context' => (
+	isa      => 'Template::Context',
+	is       => 'ro',
+	required => 1,
 );
-has 'config', (
+has 'config' => (
 	isa        => HashRef,
 	is         => 'ro',
 	lazy_build => 1,
 );
-has 'requested_filters', (
-	isa        => ArrayRef[Str],
-	is         => 'ro',
-	required   => 1,
+has 'requested_filters' => (
+	isa => ArrayRef [Str],
+	is => 'ro',
+	required => 1,
 );
-has 'filter_prefix', (
+has 'filter_prefix' => (
 	isa        => Str,
 	is         => 'ro',
 	lazy_build => 1,
 );
 
 # vmethods defined by something other than Template::Plugin::FilterVMethods
-has 'other_vmethods', (
-	isa        => HashRef,
-	is         => 'rw',
-	reader     => 'get_other_vmethods',
-	writer     => 'set_other_vmethods',
+has 'other_vmethods' => (
+	isa    => HashRef,
+	is     => 'rw',
+	reader => 'get_other_vmethods',
+	writer => 'set_other_vmethods',
 );
+
 # vmethods defined by Template::Plugin::FilterVMethods. A class attribute
 # so as to share the list between multiple [% USE FilterVMethods %] calls.
-class_has 'fvm_vmethods', (
-	isa        => HashRef[Bool],
-	is         => 'rw',
-	reader     => 'get_fvm_vmethods',
-	writer     => 'set_fvm_vmethods',
-	default    => sub { {} },
+class_has 'fvm_vmethods' => (
+	isa => HashRef [Bool],
+	is => 'rw',
+	reader  => 'get_fvm_vmethods',
+	writer  => 'set_fvm_vmethods',
+	default => sub { {} },
 );
 
 # Refresh list of other vmethods before every access:
@@ -107,20 +107,18 @@ before 'get_other_vmethods', sub {
 	my %other_vmethods;
 	{
 		no warnings 'once';
-		%other_vmethods = (
-			%$Template::Stash::ROOT_OPS,
-			%$Template::Stash::SCALAR_OPS,
-		);
+		%other_vmethods = ( %$Template::Stash::ROOT_OPS, %$Template::Stash::SCALAR_OPS, );
 	}
 	my $fmv_vmethods = $self->get_fvm_vmethods;
-	foreach my $vmethod_name (keys %other_vmethods) {
+	foreach my $vmethod_name ( keys %other_vmethods ) {
 		delete $other_vmethods{$vmethod_name} if $fmv_vmethods->{$vmethod_name};
 	}
-	$self->set_other_vmethods(\%other_vmethods);
+	$self->set_other_vmethods( \%other_vmethods );
 };
 
 sub BUILDARGS {
-	my ($class, $context, @requested_filters) = @_;
+	my ( $class, $context, @requested_filters ) = @_;
+
 	#@requested_filters = ('filter') if !@requested_filters;
 	@requested_filters = uniq @requested_filters;
 	return $class->SUPER::BUILDARGS(
@@ -128,17 +126,20 @@ sub BUILDARGS {
 		requested_filters => \@requested_filters,
 	);
 }
+
 sub BUILD {
-	my $self = shift;
+	my $self    = shift;
 	my $context = $self->get_context;
-	my $config = $self->get_config;
+	my $config  = $self->get_config;
 	$config->{'FVM_PREFIX'} = '' if !exists $config->{'FVM_PREFIX'};
 	return FilterVMethods->error("FVM_PREFIX includes characters outside [a-z_].")
-		if $config->{'FVM_PREFIX'} =~ /[^a-z_]/;
+			if $config->{'FVM_PREFIX'} =~ /[^a-z_]/;
 
 	my $requested_filters = $self->get_requested_filters;
+
 	# if requested to get all available filters:
-	if ( any {$_ eq ':all'} @$requested_filters ) {
+	if ( any { $_ eq ':all' } @$requested_filters ) {
+
 		# Get core filters:
 		my @available_filters;
 		{
@@ -146,7 +147,7 @@ sub BUILD {
 			no warnings 'once';
 			@available_filters = keys %$Template::Filters::FILTERS;
 		}
-		
+
 		# Get plugin filters:
 		foreach my $plugin ( @{ $context->{'LOAD_FILTERS'} } ) {
 			foreach my $filter_name ( keys %{ $plugin->{'FILTERS'} } ) {
@@ -157,8 +158,8 @@ sub BUILD {
 	}
 
 	# Define a vmethod for each filter:
-	my $prefix = $self->get_filter_prefix;
-	my $fvm_vmethods = FilterVMethods->get_fvm_vmethods;
+	my $prefix         = $self->get_filter_prefix;
+	my $fvm_vmethods   = FilterVMethods->get_fvm_vmethods;
 	my $other_vmethods = $self->get_other_vmethods;
 	foreach my $filter_name (@$requested_filters) {
 		$filter_name = $prefix . $filter_name;
@@ -166,45 +167,47 @@ sub BUILD {
 		if ( $other_vmethods->{$filter_name} ) {
 			return FilterVMethods->error("Virtual-method name collision on '$filter_name'");
 		} elsif ( !$fvm_vmethods->{$filter_name} ) {
-			my $sub = sub { $self->get_filter_sub($filter_name, @_) };
-			$context->define_vmethod('scalar', $filter_name, $sub);
+			my $sub = sub { $self->get_filter_sub( $filter_name, @_ ) };
+			$context->define_vmethod( 'scalar', $filter_name, $sub );
 			$fvm_vmethods->{$filter_name} = 1;
 		}
 	}
-	
+
 	# Define the 'filter' vmethod:
 	if ( !$fvm_vmethods->{'filter'} ) {
-		$context->define_vmethod('scalar', 'filter', sub { $self->use_filter(@_) } );
+		$context->define_vmethod( 'scalar', 'filter', sub { $self->use_filter(@_) } );
 		$fvm_vmethods->{'filter'} = 1;
 	}
 }
 
 # For using a filter as in "some_var.filter('filter_name')":
 sub use_filter {
-	my ($self, $value, $filter_name, @args) = @_;
+	my ( $self, $value, $filter_name, @args ) = @_;
 	return FilterVMethods->error('At least one argument (a filter name) is required.')
-		if !defined $filter_name;
+			if !defined $filter_name;
 	my $context = $self->get_context;
-	my $filter = $context->filter($filter_name, \@args);
+	my $filter = $context->filter( $filter_name, \@args );
 	return $filter->($value);
 }
 
 # For using a filter as in "some_var.filter_name"
 sub get_filter_sub {
-	my ($self, $filter_name, $value, @args) = @_;
+	my ( $self, $filter_name, $value, @args ) = @_;
 	my $prefix = $self->get_filter_prefix;
 	$filter_name =~ s/^$prefix//;
 	my $context = $self->get_context;
-	my $filter = $context->filter($filter_name, \@args);
+	my $filter = $context->filter( $filter_name, \@args );
 	return $filter->($value);
 }
+
 sub _build_config {
-	my $self = shift;
+	my $self    = shift;
 	my $context = $self->get_context;
 	return $context->{'CONFIG'};
 }
+
 sub _build_filter_prefix {
-	my $self = shift;
+	my $self   = shift;
 	my $config = $self->get_config;
 	return defined $config->{'FVM_PREFIX'} ? $config->{'FVM_PREFIX'} : '';
 }
@@ -221,7 +224,8 @@ Thanks to Yuval Kogman for writing a handy example of a Moose-ified Template Too
 
 Copyright 2011 Richard Simões.
 
-This document may be freely modified and distributed under the same terms as Perl itself. See http://dev.perl.org/licenses/ for more information.
+This document may be freely modified and distributed under the same terms as Perl itself.
+See http://dev.perl.org/licenses/ for more information.
 
 =head1 SEE ALSO
 

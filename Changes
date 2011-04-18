@@ -1,4 +1,7 @@
-0.04  2011-04-16
+0.05  2011-04-18
+	- Added minimum versions for all elements in BUILD_REQUIRES and PREREQ_PM
+
+0.04  2011-04-18
 	- Fixed manifest.t
 	- Made tests stronger
 	- Cleaned up code a bit

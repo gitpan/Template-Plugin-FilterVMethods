@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Template-Plugin-FilterVMethods
-version:            0.04
+version:            0.05
 abstract:           Add a .filter vmethod, or add individual filters as individual vmethods. 
 author:
     - Richard Simões <rsimoes@cpan.org>
@@ -9,18 +9,18 @@ distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
 build_requires:
-    ok:                   0
-    Template::Plugin::HTML::Strip:  0
-    Test::More:           0
+    ok:                   0.02
+    Template::Plugin::HTML::Strip:  0.01
+    Test::More:           0.88
 requires:
-    List::AllUtils:       0
-    Moose:                0
-    MooseX::ClassAttribute:  0
-    MooseX::FollowPBP:    0
-    MooseX::NonMoose:     0
-    MooseX::Types::Moose:  0
-    namespace::autoclean:  0
-    Template:             0
+    List::AllUtils:       0.02
+    Moose:                1.24
+    MooseX::ClassAttribute:  0.24
+    MooseX::FollowPBP:    0.05
+    MooseX::NonMoose:     0.20
+    MooseX::Types::Moose:  0.25
+    namespace::autoclean:  0.09
+    Template:             2.22
 no_index:
     directory:
         - t
